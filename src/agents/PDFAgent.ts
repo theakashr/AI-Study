@@ -1,5 +1,5 @@
 import { adminDb, adminStorage } from "@/lib/firebase-admin";
-import pdfParse from "pdf-parse";
+const pdfParse = require("pdf-parse");
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { Pinecone } from "@pinecone-database/pinecone";

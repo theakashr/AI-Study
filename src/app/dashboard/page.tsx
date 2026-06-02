@@ -1,6 +1,6 @@
 "use client";
 
-import { Flame, BookOpen, FileText, CheckCircle2 } from "lucide-react";
+import { Flame, BookOpen, FileText, CheckCircle2, MessageSquare, Zap, Target, Clock, Brain } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Dot } from "recharts";
 
 export default function DashboardPage() {
@@ -167,6 +167,77 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Row 3: 7 Autonomous Agents Section */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold text-center text-white tracking-wide mb-8 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+          7 Autonomous Agents at Your Service
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            { 
+              icon: BookOpen, 
+              title: "Summary Agent", 
+              desc: "Instantly extracts chapter-wise summaries and exam-oriented notes.",
+              color: "text-blue-400",
+              border: "group-hover:border-blue-500/50",
+              shadow: "group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+            },
+            { 
+              icon: MessageSquare, 
+              title: "Tutor Agent", 
+              desc: "Explains difficult concepts with examples and citations.",
+              color: "text-purple-400",
+              border: "group-hover:border-purple-500/50",
+              shadow: "group-hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]"
+            },
+            { 
+              icon: Zap, 
+              title: "Quiz Agent", 
+              desc: "Generates custom MCQs and Short Answers for instant evaluation.",
+              color: "text-yellow-400",
+              border: "group-hover:border-yellow-500/50",
+              shadow: "group-hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]"
+            },
+            { 
+              icon: Target, 
+              title: "Flashcard Agent", 
+              desc: "Creates Q&A pairs for active recall and tracks retention.",
+              color: "text-red-400",
+              border: "group-hover:border-red-500/50",
+              shadow: "group-hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+            },
+            { 
+              icon: Clock, 
+              title: "Study Planner", 
+              desc: "Generates optimal daily schedules and revision reminders.",
+              color: "text-emerald-400",
+              border: "group-hover:border-emerald-500/50",
+              shadow: "group-hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+            },
+            { 
+              icon: Brain, 
+              title: "Voice Agent", 
+              desc: "Hands-free learning with Speech-to-Text and Text-to-Speech.",
+              color: "text-cyan-400",
+              border: "group-hover:border-cyan-500/50",
+              shadow: "group-hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+            }
+          ].map((agent, idx) => (
+            <div 
+              key={idx}
+              className={`group p-6 rounded-2xl bg-[#161B29]/80 backdrop-blur-xl border border-white/5 cursor-pointer transition-all duration-300 hover:scale-[1.02] ${agent.border} ${agent.shadow} relative overflow-hidden`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10">
+                <agent.icon className={`w-8 h-8 mb-4 ${agent.color}`} />
+                <h3 className="text-lg font-bold text-white mb-2">{agent.title}</h3>
+                <p className="text-sm text-gray-400">{agent.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
