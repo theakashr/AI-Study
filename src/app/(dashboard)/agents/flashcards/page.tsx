@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Target, Loader2, PlayCircle, ChevronRight, ChevronLeft, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
+import { useAuth } from "@/lib/useAuth";
+import { saveAgentData } from "@/lib/db";
 
 interface Flashcard {
   front: string;
@@ -10,6 +12,7 @@ interface Flashcard {
 }
 
 export default function FlashcardAgentPage() {
+  const { user } = useAuth();
   const [topic, setTopic] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
@@ -40,6 +43,18 @@ export default function FlashcardAgentPage() {
       setCurrentIndex(0);
       setIsFlipped(false);
       setStatus("active");
+      
+      if (user) {
+        try {
+          await saveAgentData("flashcards", user.uid, {
+            topic,
+            flashcards: data.flashcards
+          });
+        } catch(e) {
+          console.error("Failed to save flashcards to database:", e);
+        }
+      }
+
       toast.success("Flashcards generated successfully!");
     } catch (error: any) {
       toast.error(error.message);

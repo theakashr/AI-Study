@@ -5,8 +5,11 @@ import { Search, Loader2, PlayCircle, FileText, Download } from "lucide-react";
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remarkGfm";
+import { useAuth } from "@/lib/useAuth";
+import { saveAgentData } from "@/lib/db";
 
 export default function ResearchAgentPage() {
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [report, setReport] = useState<string | null>(null);
@@ -31,6 +34,18 @@ export default function ResearchAgentPage() {
       if (!res.ok) throw new Error(data.error || "Failed to generate report");
       
       setReport(data.report);
+      
+      if (user) {
+        try {
+          await saveAgentData("researchReports", user.uid, {
+            query,
+            content: data.report
+          });
+        } catch(e) {
+          console.error("Failed to save research report to database:", e);
+        }
+      }
+
       toast.success("Research report generated successfully!");
     } catch (error: any) {
       toast.error(error.message);

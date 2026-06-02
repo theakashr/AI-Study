@@ -5,8 +5,11 @@ import { BookOpen, Upload, Loader2, FileText, CheckCircle2 } from "lucide-react"
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remarkGfm";
+import { useAuth } from "@/lib/useAuth";
+import { saveAgentData } from "@/lib/db";
 
 export default function SummaryAgentPage() {
+  const { user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
@@ -48,6 +51,18 @@ export default function SummaryAgentPage() {
       if (!res.ok) throw new Error(data.error || "Failed to generate summary");
       
       setSummary(data.summary);
+      
+      if (user) {
+        try {
+          await saveAgentData("summaries", user.uid, {
+            filename: file.name,
+            content: data.summary,
+          });
+        } catch (e) {
+          console.error("Failed to save summary to database:", e);
+        }
+      }
+
       toast.success("Summary generated successfully!");
     } catch (error: any) {
       toast.error(error.message);

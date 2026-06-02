@@ -5,6 +5,8 @@ import { MessageSquare, Send, Loader2, Bot, User, FileText } from "lucide-react"
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remarkGfm";
+import { useAuth } from "@/lib/useAuth";
+import { saveAgentData, updateAgentData } from "@/lib/db";
 
 interface Message {
   role: "user" | "model";
@@ -12,6 +14,8 @@ interface Message {
 }
 
 export default function TutorAgentPage() {
+  const { user } = useAuth();
+  const [chatId, setChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     { role: "model", content: "Hello! I am your AI Tutor. I specialize in explaining difficult concepts using real-world analogies. What would you like to learn today?" }
   ]);
@@ -50,7 +54,28 @@ export default function TutorAgentPage() {
       
       if (!res.ok) throw new Error(data.error || "Failed to generate response");
       
-      setMessages([...newMessages, { role: "model", content: data.reply }]);
+      const newModelMessage: Message = { role: "model", content: data.reply };
+      const updatedMessages = [...newMessages, newModelMessage];
+      setMessages(updatedMessages);
+      
+      if (user) {
+        try {
+          if (!chatId) {
+            const id = await saveAgentData("chats", user.uid, {
+              messages: updatedMessages,
+              context
+            });
+            setChatId(id);
+          } else {
+            await updateAgentData("chats", chatId, {
+              messages: updatedMessages,
+            });
+          }
+        } catch (e) {
+          console.error("Failed to sync chat to database", e);
+        }
+      }
+      
     } catch (error: any) {
       toast.error(error.message);
     } finally {

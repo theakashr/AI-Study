@@ -5,8 +5,11 @@ import { Clock, Loader2, PlayCircle, CalendarDays, BookA, Timer } from "lucide-r
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remarkGfm";
+import { useAuth } from "@/lib/useAuth";
+import { saveAgentData } from "@/lib/db";
 
 export default function StudyPlannerAgentPage() {
+  const { user } = useAuth();
   const [subjects, setSubjects] = useState("");
   const [examDate, setExamDate] = useState("");
   const [hoursPerDay, setHoursPerDay] = useState("");
@@ -33,6 +36,20 @@ export default function StudyPlannerAgentPage() {
       if (!res.ok) throw new Error(data.error || "Failed to generate schedule");
       
       setSchedule(data.schedule);
+      
+      if (user) {
+        try {
+          await saveAgentData("studyPlans", user.uid, {
+            subjects,
+            examDate,
+            hoursPerDay,
+            content: data.schedule
+          });
+        } catch(e) {
+          console.error("Failed to save study plan to database:", e);
+        }
+      }
+
       toast.success("Study schedule generated successfully!");
     } catch (error: any) {
       toast.error(error.message);

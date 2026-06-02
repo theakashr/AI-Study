@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Zap, Loader2, PlayCircle, CheckCircle2, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
+import { useAuth } from "@/lib/useAuth";
+import { saveAgentData } from "@/lib/db";
 
 interface QuizQuestion {
   type: string;
@@ -13,6 +15,7 @@ interface QuizQuestion {
 }
 
 export default function QuizAgentPage() {
+  const { user } = useAuth();
   const [topic, setTopic] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [quizData, setQuizData] = useState<QuizQuestion[]>([]);
@@ -54,7 +57,7 @@ export default function QuizAgentPage() {
     setSelectedAnswers(prev => ({ ...prev, [qIdx]: oIdx }));
   };
 
-  const handleSubmitQuiz = () => {
+  const handleSubmitQuiz = async () => {
     let calculatedScore = 0;
     quizData.forEach((q, idx) => {
       if (q.options[selectedAnswers[idx]] === q.answer) {
@@ -63,6 +66,19 @@ export default function QuizAgentPage() {
     });
     setScore(calculatedScore);
     setQuizStatus("results");
+    
+    if (user) {
+      try {
+        await saveAgentData("quizzes", user.uid, {
+          topic,
+          score: calculatedScore,
+          total: quizData.length,
+          quizData
+        });
+      } catch(e) {
+        console.error("Failed to save quiz to database:", e);
+      }
+    }
   };
 
   const resetQuiz = () => {
