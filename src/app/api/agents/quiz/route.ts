@@ -55,7 +55,10 @@ Output ONLY a valid JSON array matching this exact schema, with no markdown form
       }
     });
 
-    const quizData = JSON.parse(response.text || "[]");
+    let rawText = response.text || "[]";
+    rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    
+    const quizData = JSON.parse(rawText);
     return NextResponse.json({ quiz: quizData });
 
   } catch (error: any) {

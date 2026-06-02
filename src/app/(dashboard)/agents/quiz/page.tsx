@@ -37,7 +37,12 @@ export default function QuizAgentPage() {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setFile(e.dataTransfer.files[0]);
+      const droppedFile = e.dataTransfer.files[0];
+      if (droppedFile.type !== "application/pdf" && !droppedFile.name.endsWith('.pdf')) {
+        toast.error("Please upload a PDF file.");
+        return;
+      }
+      setFile(droppedFile);
       setTopic("");
     }
   };
