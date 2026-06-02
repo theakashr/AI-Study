@@ -1,7 +1,8 @@
 "use client";
 
-import { Flame, BookOpen, FileText, CheckCircle2, MessageSquare, Zap, Target, Clock, Brain } from "lucide-react";
+import { Flame, BookOpen, FileText, CheckCircle2, MessageSquare, Zap, Target, Clock, Brain, Search } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Dot } from "recharts";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const chartData = [
@@ -183,7 +184,8 @@ export default function DashboardPage() {
               desc: "Instantly extracts chapter-wise summaries and exam-oriented notes.",
               color: "text-blue-400",
               border: "group-hover:border-blue-500/50",
-              shadow: "group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+              shadow: "group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]",
+              href: "/agents/summary"
             },
             { 
               icon: MessageSquare, 
@@ -191,7 +193,8 @@ export default function DashboardPage() {
               desc: "Explains difficult concepts with examples and citations.",
               color: "text-purple-400",
               border: "group-hover:border-purple-500/50",
-              shadow: "group-hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]"
+              shadow: "group-hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]",
+              href: "/agents/tutor"
             },
             { 
               icon: Zap, 
@@ -199,7 +202,8 @@ export default function DashboardPage() {
               desc: "Generates custom MCQs and Short Answers for instant evaluation.",
               color: "text-yellow-400",
               border: "group-hover:border-yellow-500/50",
-              shadow: "group-hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]"
+              shadow: "group-hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]",
+              href: "/agents/quiz"
             },
             { 
               icon: Target, 
@@ -207,7 +211,8 @@ export default function DashboardPage() {
               desc: "Creates Q&A pairs for active recall and tracks retention.",
               color: "text-red-400",
               border: "group-hover:border-red-500/50",
-              shadow: "group-hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+              shadow: "group-hover:shadow-[0_0_20px_rgba(239,68,68,0.3)]",
+              href: "/agents/flashcards"
             },
             { 
               icon: Clock, 
@@ -215,7 +220,8 @@ export default function DashboardPage() {
               desc: "Generates optimal daily schedules and revision reminders.",
               color: "text-emerald-400",
               border: "group-hover:border-emerald-500/50",
-              shadow: "group-hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+              shadow: "group-hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]",
+              href: "/agents/study-planner"
             },
             { 
               icon: Brain, 
@@ -223,12 +229,23 @@ export default function DashboardPage() {
               desc: "Hands-free learning with Speech-to-Text and Text-to-Speech.",
               color: "text-cyan-400",
               border: "group-hover:border-cyan-500/50",
-              shadow: "group-hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+              shadow: "group-hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]",
+              href: "/agents/voice"
+            },
+            { 
+              icon: Search, 
+              title: "Research Agent", 
+              desc: "Searches uploaded notes and the web to generate detailed reports.",
+              color: "text-indigo-400",
+              border: "group-hover:border-indigo-500/50",
+              shadow: "group-hover:shadow-[0_0_20px_rgba(79,70,229,0.3)]",
+              href: "/agents/research"
             }
           ].map((agent, idx) => (
-            <div 
+            <Link 
+              href={agent.href}
               key={idx}
-              className={`group p-6 rounded-2xl bg-[#161B29]/80 backdrop-blur-xl border border-white/5 cursor-pointer transition-all duration-300 hover:scale-[1.02] ${agent.border} ${agent.shadow} relative overflow-hidden`}
+              className={`group p-6 rounded-2xl bg-[#161B29]/80 backdrop-blur-xl border border-white/5 cursor-pointer transition-all duration-300 hover:scale-[1.02] ${agent.border} ${agent.shadow} relative overflow-hidden block`}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10">
@@ -236,7 +253,7 @@ export default function DashboardPage() {
                 <h3 className="text-lg font-bold text-white mb-2">{agent.title}</h3>
                 <p className="text-sm text-gray-400">{agent.desc}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
