@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
+export const maxDuration = 60; // Prevent Vercel 504 Timeout
+
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(req: NextRequest) {
@@ -32,7 +34,7 @@ ${file ? `Document Text:\n${extractedText.substring(0, 35000)}` : `Topic: "${top
 
 You must generate exactly 20 multiple choice questions (mcq).
 Mix conceptual and application-based questions.
-For MCQs, provide 4 options, the exact correct answer (must perfectly match one of the options), and a detailed explanation of *why* it is correct.
+For MCQs, provide 4 options, the exact correct answer (must perfectly match one of the options), and a brief 1-sentence explanation of *why* it is correct.
 
 Output ONLY a valid JSON array matching this exact schema, with no markdown formatting around it (no \`\`\`json):
 [
