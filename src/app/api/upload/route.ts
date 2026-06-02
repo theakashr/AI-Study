@@ -48,7 +48,6 @@ export async function POST(req: NextRequest) {
     await docRef.update({ fileUrl });
 
     // 3. Extract text
-    const pdfData = await pdfParse(fileBuffer);
     const textContent = pdfData.text;
 
     // Update page count
