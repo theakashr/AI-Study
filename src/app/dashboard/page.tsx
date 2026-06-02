@@ -1,148 +1,171 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { auth, db } from "@/lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { BookOpen, Trophy, Flame, FileText, ArrowRight } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Flame, BookOpen, FileText, CheckCircle2 } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Dot } from "recharts";
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState({
-    streak: 0,
-    topics: 0,
-    pdfs: 0,
-    quizAvg: 0
-  });
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      const user = auth.currentUser;
-      if (!user) {
-        // In a real app we'd redirect, but for UI mockup let's just show zero states
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const docsQuery = query(collection(db, "documents"), where("userId", "==", user.uid));
-        const docsSnap = await getDocs(docsQuery);
-        const pdfCount = docsSnap.size;
-
-        const quizQuery = query(collection(db, "quizResults"), where("userId", "==", user.uid));
-        const quizSnap = await getDocs(quizQuery);
-        
-        let totalScore = 0;
-        quizSnap.forEach(doc => {
-          const data = doc.data();
-          totalScore += (data.score / data.totalQuestions) * 100;
-        });
-        const quizAvg = quizSnap.size ? Math.round(totalScore / quizSnap.size) : 0;
-
-        setStats({
-          streak: 5, // Mocked streak calculation
-          topics: 12, // Mocked topics
-          pdfs: pdfCount,
-          quizAvg
-        });
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) fetchStats();
-      else router.push("/login");
-    });
-
-    return () => unsubscribe();
-  }, [router]);
-
-  const mockChartData = [
-    { day: "Mon", score: 65 },
-    { day: "Tue", score: 70 },
-    { day: "Wed", score: 85 },
-    { day: "Thu", score: 82 },
-    { day: "Fri", score: 90 },
-    { day: "Sat", score: 95 },
-    { day: "Sun", score: 98 },
+  const chartData = [
+    { day: "Mon 12", hours: 2, quizzes: 1.5 },
+    { day: "Tue 13", hours: 4, quizzes: 3 },
+    { day: "Wed 14", hours: 3.5, quizzes: 2.5 },
+    { day: "Thu 15", hours: 5, quizzes: 4 },
+    { day: "Fri 16", hours: 7.2, quizzes: 6.5 },
+    { day: "Sat 17", hours: 4.5, quizzes: 3.5 },
+    { day: "Sun 18", hours: 8, quizzes: 6 },
   ];
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[#2A2E3D]/90 backdrop-blur-md border border-white/10 px-4 py-2 rounded-xl shadow-xl text-center">
+          <p className="text-white text-sm">{label.split(" ")[0]}: {payload[0].value} Hrs</p>
+          <p className="text-gray-300 text-xs">94%</p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <div className="min-h-screen bg-background p-6 md:p-10 text-foreground">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-4xl font-bold text-primary">Student Dashboard</h1>
-          <Link href="/upload" className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium shadow-md hover:bg-opacity-90">
-            Upload New PDF
-          </Link>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="p-6 bg-card border border-border rounded-2xl shadow-sm flex flex-col items-center justify-center text-center">
-            <Flame className="w-10 h-10 text-orange-500 mb-2" />
-            <span className="text-3xl font-bold">{stats.streak} Days</span>
-            <span className="text-sm text-muted-foreground">Study Streak</span>
+    <div className="space-y-6">
+      {/* Top Stat Cards */}
+      <div className="grid grid-cols-4 gap-6">
+        {/* Card 1 */}
+        <div className="bg-[#161B29]/80 backdrop-blur-xl rounded-2xl p-6 border border-indigo-500/30 shadow-[0_0_25px_rgba(79,70,229,0.15)] relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-50" />
+          <div className="relative z-10 flex items-start gap-4">
+            <div className="p-2.5 rounded-xl bg-indigo-500/20 border border-indigo-500/30">
+              <Flame className="w-5 h-5 text-indigo-400" />
+            </div>
+            <div className="text-sm font-medium text-gray-300 mt-1">Study Streak</div>
           </div>
-          <div className="p-6 bg-card border border-border rounded-2xl shadow-sm flex flex-col items-center justify-center text-center">
-            <BookOpen className="w-10 h-10 text-accent mb-2" />
-            <span className="text-3xl font-bold">{stats.topics}</span>
-            <span className="text-sm text-muted-foreground">Topics Completed</span>
-          </div>
-          <div className="p-6 bg-card border border-border rounded-2xl shadow-sm flex flex-col items-center justify-center text-center">
-            <FileText className="w-10 h-10 text-secondary mb-2" />
-            <span className="text-3xl font-bold">{stats.pdfs}</span>
-            <span className="text-sm text-muted-foreground">PDFs Uploaded</span>
-          </div>
-          <div className="p-6 bg-card border border-border rounded-2xl shadow-sm flex flex-col items-center justify-center text-center">
-            <Trophy className="w-10 h-10 text-yellow-500 mb-2" />
-            <span className="text-3xl font-bold">{stats.quizAvg}%</span>
-            <span className="text-sm text-muted-foreground">Average Quiz Score</span>
+          <div className="relative z-10 mt-6">
+            <h3 className="text-4xl font-bold text-white mb-2">14 Days</h3>
+            <p className="text-sm text-indigo-400 font-medium">+2 today</p>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Chart Section */}
-          <div className="md:col-span-2 p-6 bg-card border border-border rounded-2xl shadow-sm">
-            <h2 className="text-2xl font-bold mb-6">Weekly Progress</h2>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={mockChartData}>
-                  <XAxis dataKey="day" stroke="#888888" />
-                  <YAxis stroke="#888888" />
-                  <Tooltip contentStyle={{ backgroundColor: "#1e1e2f", borderColor: "#4f46e5" }} />
-                  <Line type="monotone" dataKey="score" stroke="#4f46e5" strokeWidth={4} dot={{ r: 6, fill: "#4f46e5" }} />
-                </LineChart>
-              </ResponsiveContainer>
+        {/* Card 2 */}
+        <div className="bg-[#161B29]/80 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/30 shadow-[0_0_25px_rgba(168,85,247,0.15)] relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-50" />
+          <div className="relative z-10 flex items-start gap-4">
+            <div className="p-2.5 rounded-xl bg-purple-500/20 border border-purple-500/30">
+              <BookOpen className="w-5 h-5 text-purple-400" />
+            </div>
+            <div className="text-sm font-medium text-gray-300 mt-1 leading-tight">Topics<br/>Completed</div>
+          </div>
+          <div className="relative z-10 mt-4">
+            <h3 className="text-4xl font-bold text-white mb-2">38 Topics</h3>
+            <p className="text-sm text-purple-400 font-medium">6 this week</p>
+          </div>
+        </div>
+
+        {/* Card 3 */}
+        <div className="bg-[#161B29]/80 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/30 shadow-[0_0_25px_rgba(6,182,212,0.15)] relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-50" />
+          <div className="relative z-10 flex items-start gap-4">
+            <div className="p-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
+              <FileText className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div className="text-sm font-medium text-gray-300 mt-1">PDFs Uploaded</div>
+          </div>
+          <div className="relative z-10 mt-6">
+            <h3 className="text-4xl font-bold text-white mb-2">52 Files</h3>
+            <p className="text-sm text-cyan-400 font-medium">8 newly indexed</p>
+          </div>
+        </div>
+
+        {/* Card 4 */}
+        <div className="bg-[#161B29]/80 backdrop-blur-xl rounded-2xl p-6 border border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.15)] relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-50" />
+          <div className="relative z-10 flex items-start gap-4">
+            <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div className="text-sm font-medium text-gray-300 mt-1">Quiz Score</div>
+          </div>
+          <div className="relative z-10 mt-6">
+            <h3 className="text-4xl font-bold text-white mb-2">92%</h3>
+            <p className="text-sm text-emerald-400 font-medium">+4% avg</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-6">
+        {/* Chart Section */}
+        <div className="col-span-2 bg-[#161B29]/80 backdrop-blur-xl rounded-2xl p-6 border border-white/5 relative">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-white tracking-wide">Weekly Study Progress</h2>
+              <p className="text-gray-400 text-sm mt-1">Hours Studied vs Quizzes</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-300">Mon 12</span>
+              <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-300">Sun 18 Aug</span>
             </div>
           </div>
+          
+          <div className="h-72 mt-8 -ml-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorQuizzes" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} tickFormatter={(val) => `${val} Hrs`} dx={-10} domain={[0, 10]} />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '3 3' }} />
+                <Area type="monotone" dataKey="hours" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorHours)" activeDot={{r: 6, fill: "#fff", stroke: "#4f46e5", strokeWidth: 2}} />
+                <Area type="monotone" dataKey="quizzes" stroke="#a855f7" strokeWidth={3} fillOpacity={1} fill="url(#colorQuizzes)" activeDot={{r: 6, fill: "#fff", stroke: "#a855f7", strokeWidth: 2}} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
-          {/* AI Recommendations */}
-          <div className="p-6 bg-card border border-border rounded-2xl shadow-sm flex flex-col">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <span className="text-accent">AI</span> Recommendations
-            </h2>
-            <div className="space-y-4 flex-1">
-              <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20">
-                <p className="font-semibold text-secondary mb-1">Focus Area</p>
-                <p className="text-sm">Your scores in "Cell Biology" are dipping. Try generating a new quiz.</p>
-              </div>
-              <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                <p className="font-semibold text-primary mb-1">Study Planner</p>
-                <p className="text-sm">You have 5 days until your physics exam. Start your revision session now.</p>
+        {/* AI Recommendations */}
+        <div className="col-span-1 bg-[#161B29]/80 backdrop-blur-xl rounded-2xl p-6 border border-white/5">
+          <h2 className="text-xl font-bold text-white tracking-wide mb-6">AI Study<br/>Recommendations</h2>
+          
+          <div className="space-y-4">
+            {/* Rec 1 */}
+            <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 relative overflow-hidden group hover:bg-purple-500/20 transition-colors cursor-pointer">
+              <div className="absolute left-0 top-0 w-1 h-full bg-purple-500 shadow-[0_0_10px_#A855F7]" />
+              <p className="text-xs text-gray-400 mb-1">1. Review</p>
+              <h4 className="text-sm font-medium text-white mb-3">Neural Network<br/>Backpropagation</h4>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500 text-white shadow-[0_0_8px_#A855F7]">Purple</span>
+                <span className="text-xs text-gray-400">High Priority</span>
               </div>
             </div>
-            <Link href="/planner" className="mt-6 flex items-center justify-center gap-2 w-full py-3 bg-card border-2 border-primary text-primary rounded-xl font-bold hover:bg-primary hover:text-primary-foreground transition-all">
-              View Study Plan <ArrowRight className="w-5 h-5" />
-            </Link>
+
+            {/* Rec 2 */}
+            <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 relative overflow-hidden group hover:bg-cyan-500/20 transition-colors cursor-pointer">
+              <div className="absolute left-0 top-0 w-1 h-full bg-cyan-500 shadow-[0_0_10px_#06B6D4]" />
+              <p className="text-xs text-gray-400 mb-1">2. Practice</p>
+              <h4 className="text-sm font-medium text-white mb-3">Data Structures: Graphs</h4>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500 text-white shadow-[0_0_8px_#06B6D4]">Cyan</span>
+                <span className="text-xs text-gray-400">15 min</span>
+              </div>
+            </div>
+
+            {/* Rec 3 */}
+            <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/30 relative overflow-hidden group hover:bg-indigo-500/20 transition-colors cursor-pointer">
+              <div className="absolute left-0 top-0 w-1 h-full bg-indigo-500 shadow-[0_0_10px_#4F46E5]" />
+              <p className="text-xs text-gray-400 mb-1">3. Next Quiz</p>
+              <h4 className="text-sm font-medium text-white mb-3">Operating Systems Basics</h4>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500 text-white shadow-[0_0_8px_#4F46E5]">Indigo</span>
+                <span className="text-xs text-gray-400">Scheduled</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

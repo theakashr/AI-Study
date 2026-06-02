@@ -17,7 +17,7 @@ export default function LandingPage() {
             <Link href="/login" className="px-4 py-2 rounded-lg font-medium hover:text-primary transition-colors">
               Login
             </Link>
-            <Link href="/login" className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-opacity-90 transition-all border border-border shadow-md">
+            <Link href="/login" className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-opacity-90 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)]">
               Get Started
             </Link>
           </div>
@@ -35,7 +35,7 @@ export default function LandingPage() {
           className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6"
         >
           Supercharge your learning with <br className="hidden md:block"/>
-          <span className="text-primary underline decoration-secondary">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">
             AI-Powered Intelligence
           </span>
         </motion.h1>
@@ -54,7 +54,7 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Link href="/login" className="px-8 py-4 bg-primary text-primary-foreground text-lg rounded-full font-bold hover:scale-105 transition-transform border border-border shadow-lg">
+          <Link href="/login" className="px-8 py-4 bg-primary text-primary-foreground text-lg rounded-full font-bold hover:scale-105 transition-transform shadow-[0_0_30px_rgba(79,70,229,0.5)]">
             Start Learning for Free
           </Link>
         </motion.div>

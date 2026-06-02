@@ -1,9 +1,9 @@
 # UI Design Rules
 
 ## Color Palette
-- **Primary**: #000000 (Black) / #FFFFFF (White in Dark Mode)
-- **Secondary**: #333333 (Dark Gray) / #CCCCCC (Light Gray in Dark Mode)
-- **Accent**: #111111 (Almost Black) / #EEEEEE (Almost White in Dark Mode)
+- **Primary**: #4F46E5 (Indigo)
+- **Secondary**: #7C3AED (Purple)
+- **Accent**: #06B6D4 (Cyan)
 
 ## Style Guidelines
 - **Theme**: Modern AI SaaS Platform
