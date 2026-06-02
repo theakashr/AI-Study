@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Search, Loader2, PlayCircle, FileText, Download } from "lucide-react";
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remarkGfm";
+import remarkGfm from "remark-gfm";
 import { useAuth } from "@/lib/useAuth";
 import { saveAgentData } from "@/lib/db";
 

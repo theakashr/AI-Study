@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageSquare, Send, Loader2, Bot, User, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remarkGfm";
+import remarkGfm from "remark-gfm";
 import { useAuth } from "@/lib/useAuth";
 import { saveAgentData, updateAgentData } from "@/lib/db";
 

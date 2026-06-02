@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import pdf from "pdf-parse";
 import { GoogleGenAI } from "@google/genai";
 
 // Initialize Gemini
@@ -19,6 +18,7 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
     
     // Extract text from PDF
+    const pdf = require("pdf-parse");
     const pdfData = await pdf(buffer);
     const text = pdfData.text;
 
