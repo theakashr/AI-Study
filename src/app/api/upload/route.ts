@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { adminDb, adminStorage } from "@/lib/firebase-admin";
-const pdfParse = require("pdf-parse");
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { Pinecone } from "@pinecone-database/pinecone";
@@ -19,7 +18,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const pdfBuffer = Buffer.from(await file.arrayBuffer());
+    const pdfParse = require("pdf-parse");
+    const pdfData = await pdfParse(pdfBuffer);
     const fileName = file.name;
     const pineconeNamespace = `${userId}-${Date.now()}`;
 

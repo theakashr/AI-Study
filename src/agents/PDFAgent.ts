@@ -1,5 +1,5 @@
 import { adminDb, adminStorage } from "@/lib/firebase-admin";
-const pdfParse = require("pdf-parse");
+
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { Pinecone } from "@pinecone-database/pinecone";
@@ -29,6 +29,7 @@ export class PDFAgent {
     await docRef.update({ fileUrl });
 
     // 3. Extract text
+    const pdfParse = require("pdf-parse");
     const pdfData = await pdfParse(fileBuffer);
     await docRef.update({ pageCount: pdfData.numpages });
 
