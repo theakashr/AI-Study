@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Zap, Loader2, PlayCircle, CheckCircle2, XCircle } from "lucide-react";
+import { useState, useRef } from "react";
+import { Zap, Loader2, PlayCircle, CheckCircle2, XCircle, Upload, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/lib/useAuth";
 import { saveAgentData } from "@/lib/db";
@@ -17,26 +17,49 @@ interface QuizQuestion {
 export default function QuizAgentPage() {
   const { user } = useAuth();
   const [topic, setTopic] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [quizData, setQuizData] = useState<QuizQuestion[]>([]);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [quizStatus, setQuizStatus] = useState<"empty" | "active" | "results">("empty");
   const [score, setScore] = useState(0);
 
-  const handleGenerate = async (e: React.FormEvent) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFile(e.target.files[0]);
+      setTopic(""); // Clear topic if file selected
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!topic.trim()) {
-      toast.error("Please enter a topic");
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setFile(e.dataTransfer.files[0]);
+      setTopic("");
+    }
+  };
+
+  const handleGenerate = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!topic.trim() && !file) {
+      toast.error("Please enter a topic or upload a PDF");
       return;
     }
 
     setIsGenerating(true);
     setQuizStatus("empty");
+    
+    const formData = new FormData();
+    if (topic) formData.append("topic", topic);
+    if (file) formData.append("file", file);
+
     try {
       const res = await fetch("/api/agents/quiz", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic }),
+        body: formData,
       });
       const data = await res.json();
       
@@ -70,7 +93,7 @@ export default function QuizAgentPage() {
     if (user) {
       try {
         await saveAgentData("quizzes", user.uid, {
-          topic,
+          topic: file ? file.name : topic,
           score: calculatedScore,
           total: quizData.length,
           quizData
@@ -84,6 +107,7 @@ export default function QuizAgentPage() {
   const resetQuiz = () => {
     setQuizStatus("empty");
     setTopic("");
+    setFile(null);
     setQuizData([]);
   };
 
@@ -103,35 +127,77 @@ export default function QuizAgentPage() {
         </div>
 
         {quizStatus === "empty" && (
-          <div className="relative z-10">
-            <form onSubmit={handleGenerate} className="flex flex-col items-center justify-center space-y-6 h-64 border-2 border-dashed border-white/10 rounded-xl bg-white/5 p-8">
-              <Zap className="w-12 h-12 text-gray-500 opacity-50" />
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                onDrop={handleDrop}
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                className={`h-48 flex flex-col items-center justify-center border-2 border-dashed rounded-xl transition-all cursor-pointer group
+                  ${isDragging ? 'border-yellow-400 bg-yellow-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-yellow-500/50'}
+                `}
+              >
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  onChange={handleFileSelect} 
+                  accept=".pdf"
+                />
+                <Upload className={`w-10 h-10 mb-3 transition-colors ${isDragging ? 'text-yellow-400' : 'text-gray-500 group-hover:text-yellow-400'}`} />
+                <p className={`font-medium ${isDragging ? 'text-yellow-400' : 'text-white'}`}>
+                  {isDragging ? 'Drop PDF to generate' : 'Drag & Drop PDF Here'}
+                </p>
+              </div>
+
+              {file && (
+                <div className="flex items-center justify-between p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <FileText className="w-5 h-5 text-yellow-400 shrink-0" />
+                    <p className="text-white text-sm truncate">{file.name}</p>
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); setFile(null); }} className="text-gray-400 hover:text-white">
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col justify-center space-y-6 bg-white/5 border border-white/10 p-8 rounded-xl h-48">
+              <div className="flex items-center justify-center gap-4 text-gray-400 mb-2">
+                <div className="h-px bg-white/10 flex-1"></div>
+                <span className="text-sm font-medium uppercase tracking-wider">OR</span>
+                <div className="h-px bg-white/10 flex-1"></div>
+              </div>
               <input 
                 type="text" 
                 value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="Enter a topic (e.g. Quantum Computing, OOP in Java)"
-                className="w-full max-w-md px-4 py-3 bg-[#0B0F19] border border-white/10 rounded-xl text-white focus:outline-none focus:border-yellow-500 transition-colors text-center"
-                required
+                onChange={(e) => { setTopic(e.target.value); setFile(null); }}
+                placeholder="Type a topic (e.g. History, Math)"
+                className="w-full px-4 py-3 bg-[#0B0F19] border border-white/10 rounded-xl text-white focus:outline-none focus:border-yellow-500 transition-colors text-center"
               />
+            </div>
+
+            <div className="md:col-span-2 flex justify-center mt-4">
               <button 
-                type="submit"
-                disabled={isGenerating}
-                className="px-8 py-3 bg-yellow-500 hover:bg-yellow-400 disabled:bg-yellow-500/50 text-black font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(234,179,8,0.4)] disabled:shadow-none flex items-center gap-2"
+                onClick={() => handleGenerate()}
+                disabled={isGenerating || (!topic && !file)}
+                className="px-10 py-4 bg-yellow-500 hover:bg-yellow-400 disabled:bg-yellow-500/50 text-black font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(234,179,8,0.4)] disabled:shadow-none flex items-center gap-2 text-lg"
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Generating Questions...
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    Generating 20 Questions...
                   </>
                 ) : (
                   <>
-                    <PlayCircle className="w-5 h-5" />
+                    <PlayCircle className="w-6 h-6" />
                     Generate Quiz
                   </>
                 )}
               </button>
-            </form>
+            </div>
           </div>
         )}
 

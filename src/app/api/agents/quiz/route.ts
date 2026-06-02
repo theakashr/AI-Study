@@ -5,15 +5,32 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
-    const { topic } = await req.json();
+    const formData = await req.formData();
+    const topic = formData.get("topic") as string;
+    const file = formData.get("file") as File;
 
-    if (!topic) {
-      return NextResponse.json({ error: "No topic provided" }, { status: 400 });
+    if (!topic && !file) {
+      return NextResponse.json({ error: "Please provide either a topic or a file" }, { status: 400 });
     }
 
-    const prompt = `You are a rigorous Quiz Examiner. Generate a highly accurate evaluation assessment on the following topic: "${topic}".
+    let extractedText = "";
+    if (file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const pdf = require("pdf-parse");
+      const pdfData = await pdf(buffer);
+      extractedText = pdfData.text;
+      
+      if (!extractedText || extractedText.trim().length === 0) {
+        return NextResponse.json({ error: "Could not extract text from the PDF" }, { status: 400 });
+      }
+    }
+
+    const prompt = `You are a rigorous Quiz Examiner. Generate a highly accurate evaluation assessment based on the following ${file ? 'document' : 'topic'}:
     
-You must generate exactly 5 multiple choice questions (mcq).
+${file ? `Document Text:\n${extractedText.substring(0, 35000)}` : `Topic: "${topic}"`}
+
+You must generate exactly 20 multiple choice questions (mcq).
 Mix conceptual and application-based questions.
 For MCQs, provide 4 options, the exact correct answer (must perfectly match one of the options), and a detailed explanation of *why* it is correct.
 
