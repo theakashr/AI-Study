@@ -18,7 +18,12 @@ export default function SummaryAgentPage() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      if (selectedFile.size > 4 * 1024 * 1024) {
+        toast.error("File is too large. Please upload a PDF under 4MB.");
+        return;
+      }
+      setFile(selectedFile);
     }
   };
 
@@ -26,7 +31,16 @@ export default function SummaryAgentPage() {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setFile(e.dataTransfer.files[0]);
+      const droppedFile = e.dataTransfer.files[0];
+      if (droppedFile.type !== "application/pdf" && !droppedFile.name.endsWith('.pdf')) {
+        toast.error("Please upload a PDF file.");
+        return;
+      }
+      if (droppedFile.size > 4 * 1024 * 1024) {
+        toast.error("File is too large. Please upload a PDF under 4MB.");
+        return;
+      }
+      setFile(droppedFile);
     }
   };
 
