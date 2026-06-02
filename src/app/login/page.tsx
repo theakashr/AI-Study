@@ -11,7 +11,7 @@ import {
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { BrainCircuit, Mail, Lock, ArrowRight, Loader2, Chrome } from "lucide-react";
+import { BrainCircuit, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -190,7 +190,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3.5 bg-white/5 border border-white/10 hover:border-white/20 text-white rounded-xl font-medium flex items-center justify-center gap-3 transition-all disabled:opacity-50"
           >
-            <Chrome className="w-5 h-5 text-gray-300" />
+            <span className="font-bold text-lg text-white mr-1">G</span>
             Continue with Google
           </motion.button>
 
