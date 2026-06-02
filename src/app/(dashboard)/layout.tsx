@@ -14,21 +14,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="absolute bottom-[-200px] right-[-200px] w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
         
         {/* Header */}
-        <header className="h-20 px-8 flex items-center justify-between border-b border-white/5 backdrop-blur-md sticky top-0 z-10">
-          <h2 className="text-2xl font-medium tracking-wide">
-            Student Dashboard <span className="text-gray-500 mx-2">|</span> <span className="text-gray-300">AI Study Assistant</span>
-          </h2>
-          
+        <header className="h-20 px-8 flex items-center justify-end sticky top-0 z-10">
           <div className="flex items-center gap-6">
             <button className="relative p-2 text-gray-400 hover:text-white transition-colors">
               <Bell size={20} />
               <span className="absolute top-1 right-1 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_8px_rgba(168,85,247,1)]" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center text-sm font-bold">
-                S.
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold shadow-[0_0_15px_rgba(79,70,229,0.3)] cursor-pointer hover:scale-105 transition-transform">
+                AI
               </div>
-              <span className="text-sm font-medium">Sarah Jenkins</span>
             </div>
           </div>
         </header>
