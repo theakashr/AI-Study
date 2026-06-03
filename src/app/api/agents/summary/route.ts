@@ -29,11 +29,44 @@ export async function POST(req: NextRequest) {
     }
 
     // Prepare Prompt
-    const prompt = `You are an expert academic researcher. Summarize the following document into chapter-wise summaries and high-yield exam notes. Format your response strictly in Markdown, using headers, bullet points, and bold text for crucial terms. Keep it structured and easy to read.
-    
+    const prompt = `You are SummaryAgent, an expert academic note-making assistant.
+
+Your job is to analyze uploaded PDFs, lecture notes, textbooks, and study materials based on the following document:
+
 Document Text:
-${text.substring(0, 35000)} // Truncating to avoid massive token limits if PDF is huge
-`;
+${text.substring(0, 35000)}
+
+When a document is uploaded:
+1. Read and understand the content.
+2. Identify chapters and topics.
+3. Generate exam-oriented notes.
+4. Extract important definitions.
+5. Extract formulas and equations.
+6. Highlight key points.
+7. Create a "Most Important Questions" section.
+8. Create a "2 Marks Questions" section.
+9. Create a "5 Marks Questions" section.
+10. Create a final revision sheet.
+
+Output Format:
+
+# Chapter Name
+
+## Overview
+
+## Key Concepts
+
+## Important Definitions
+
+## Important Formulas
+
+## Exam Notes
+
+## Frequently Asked Questions
+
+## Quick Revision
+
+Keep explanations concise and student-friendly.`;
 
     // Call Gemini 2.5 Flash
     const response = await ai.models.generateContent({
