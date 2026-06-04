@@ -19,8 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     const pdfBuffer = Buffer.from(await file.arrayBuffer());
-    const pdfParse = require("pdf-parse");
-    const pdfData = await pdfParse(pdfBuffer);
+    const base64Data = pdfBuffer.toString("base64");
     const fileName = file.name;
     const pineconeNamespace = `${userId}-${Date.now()}`;
 
@@ -38,7 +37,7 @@ export async function POST(req: NextRequest) {
     // 2. Upload to Firebase Storage
     const bucket = adminStorage.bucket();
     const storageFile = bucket.file(`users/${userId}/${documentId}/${fileName}`);
-    await storageFile.save(fileBuffer, {
+    await storageFile.save(pdfBuffer, {
       metadata: { contentType: file.type },
     });
     await storageFile.makePublic(); // Optional, depending on access rules
@@ -47,11 +46,25 @@ export async function POST(req: NextRequest) {
     // Update document with fileUrl
     await docRef.update({ fileUrl });
 
-    // 3. Extract text
-    const textContent = pdfData.text;
+    // 3. Extract text using Gemini Native PDF support
+    const { GoogleGenAI } = require("@google/genai");
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const extractionResponse = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { inlineData: { data: base64Data, mimeType: file.type || "application/pdf" } },
+            { text: "Extract and return all the text from this document exactly as it appears. Do not add any extra commentary or formatting." }
+          ]
+        }
+      ]
+    });
+    const textContent = extractionResponse.text || "";
 
-    // Update page count
-    await docRef.update({ pageCount: pdfData.numpages });
+    // Update page count (approximated for Gemini as 1 page per 2000 chars)
+    await docRef.update({ pageCount: Math.ceil(textContent.length / 2000) || 1 });
 
     // 4. Chunking
     const splitter = new RecursiveCharacterTextSplitter({

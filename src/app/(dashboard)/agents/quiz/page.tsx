@@ -94,10 +94,24 @@ export default function QuizAgentPage() {
     setSelectedAnswers(prev => ({ ...prev, [qIdx]: oIdx }));
   };
 
+  const isAnswerCorrect = (q: QuizQuestion, selectedIdx: number | undefined) => {
+    if (selectedIdx === undefined) return false;
+    const selectedText = q.options[selectedIdx];
+    if (selectedText === q.answer) return true;
+    
+    const letters = ["A", "B", "C", "D"];
+    if (letters.includes(q.answer)) {
+      return letters.indexOf(q.answer) === selectedIdx;
+    }
+    
+    if (q.answer.includes(selectedText) || selectedText.includes(q.answer)) return true;
+    return false;
+  };
+
   const handleSubmitQuiz = async () => {
     let calculatedScore = 0;
     quizData.forEach((q, idx) => {
-      if (q.options[selectedAnswers[idx]] === q.answer) {
+      if (isAnswerCorrect(q, selectedAnswers[idx])) {
         calculatedScore++;
       }
     });
@@ -244,8 +258,7 @@ export default function QuizAgentPage() {
             <div className="flex justify-end pt-4">
               <button 
                 onClick={handleSubmitQuiz}
-                disabled={Object.keys(selectedAnswers).length < quizData.length}
-                className="px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(234,179,8,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(234,179,8,0.4)]"
               >
                 Submit Answers
               </button>
@@ -262,7 +275,7 @@ export default function QuizAgentPage() {
             
             <div className="w-full space-y-6 mb-8 text-left">
                {quizData.map((q, idx) => {
-                 const isCorrect = q.options[selectedAnswers[idx]] === q.answer;
+                 const isCorrect = isAnswerCorrect(q, selectedAnswers[idx]);
                  return (
                   <div key={idx} className={`p-6 rounded-xl border ${isCorrect ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'}`}>
                     <div className="flex items-start gap-4">
@@ -274,7 +287,7 @@ export default function QuizAgentPage() {
                           <p className="text-sm">
                             <span className="text-gray-400">Your answer: </span>
                             <span className={isCorrect ? "text-emerald-400 font-medium" : "text-red-400 font-medium"}>
-                              {q.options[selectedAnswers[idx]]}
+                              {selectedAnswers[idx] !== undefined ? q.options[selectedAnswers[idx]] : "Not Answered"}
                             </span>
                           </p>
                           {!isCorrect && (

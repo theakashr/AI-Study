@@ -1,10 +1,25 @@
 "use client";
 
-import { Flame, BookOpen, FileText, CheckCircle2, MessageSquare, Zap, Target, Clock, Brain, Search } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Dot } from "recharts";
+import { useEffect, useState } from "react";
+import { Flame, BookOpen, FileText, CheckCircle2, MessageSquare, Zap, Target, Clock, Brain, Search, Loader2 } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import Link from "next/link";
+import { useAuth } from "@/lib/useAuth";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 export default function DashboardPage() {
+  const { user, loading } = useAuth();
+  
+  const [stats, setStats] = useState({
+    studyStreak: 1,
+    topicsCompleted: 0,
+    pdfsUploaded: 0,
+    quizAvg: 0,
+  });
+  const [isFetching, setIsFetching] = useState(true);
+
+  // Hardcoded chart data for UI aesthetic purposes (can be made dynamic later)
   const chartData = [
     { day: "Mon 12", hours: 2, quizzes: 1.5 },
     { day: "Tue 13", hours: 4, quizzes: 3 },
@@ -14,6 +29,66 @@ export default function DashboardPage() {
     { day: "Sat 17", hours: 4.5, quizzes: 3.5 },
     { day: "Sun 18", hours: 8, quizzes: 6 },
   ];
+
+  useEffect(() => {
+    // 1. Wait for Firebase Auth to initialize
+    if (loading) return; 
+
+    const fetchUserStats = async () => {
+      // If no user is logged in, stop fetching
+      if (!user?.uid) {
+        setIsFetching(false);
+        return;
+      }
+
+      try {
+        // 2. Filter Firestore Queries with where("userId", "==", currentUser.uid)
+        
+        // Fetch Quizzes to calculate Topics Completed & Quiz Average Score
+        const quizzesQuery = query(collection(db, "quizzes"), where("userId", "==", user.uid));
+        const quizSnapshot = await getDocs(quizzesQuery);
+        
+        let totalScore = 0;
+        let totalMax = 0;
+        
+        quizSnapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.score !== undefined && data.total !== undefined) {
+             totalScore += data.score;
+             totalMax += data.total;
+          }
+        });
+        
+        const calculatedQuizAvg = totalMax > 0 ? Math.round((totalScore / totalMax) * 100) : 0;
+        const quizzesCount = quizSnapshot.size;
+
+        // Fetch Summaries to combine with Quizzes for total "Topics Completed"
+        const summariesQuery = query(collection(db, "summaries"), where("userId", "==", user.uid));
+        const sumSnapshot = await getDocs(summariesQuery);
+        const summariesCount = sumSnapshot.size;
+
+        // Fetch PDFs Uploaded from documents collection
+        const docsQuery = query(collection(db, "documents"), where("userId", "==", user.uid));
+        const docSnapshot = await getDocs(docsQuery);
+        const uploadedCount = docSnapshot.size;
+
+        // Update local state with real data
+        setStats({
+          studyStreak: 1, // Can be updated with login-streak tracking
+          topicsCompleted: quizzesCount + summariesCount,
+          pdfsUploaded: uploadedCount,
+          quizAvg: calculatedQuizAvg,
+        });
+
+      } catch (error) {
+        console.error("Error fetching personalized dashboard data:", error);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    fetchUserStats();
+  }, [user, loading]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -26,6 +101,16 @@ export default function DashboardPage() {
     }
     return null;
   };
+
+  // 3. Handle State: Wait for Auth and Data to load before rendering
+  if (loading || isFetching) {
+    return (
+      <div className="flex h-screen items-center justify-center space-x-3 text-indigo-400">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <p className="font-medium animate-pulse">Loading personalized dashboard...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -41,8 +126,8 @@ export default function DashboardPage() {
             <div className="text-sm font-medium text-gray-300 mt-1">Study Streak</div>
           </div>
           <div className="relative z-10 mt-6">
-            <h3 className="text-4xl font-bold text-white mb-2">14 Days</h3>
-            <p className="text-sm text-indigo-400 font-medium">+2 today</p>
+            <h3 className="text-4xl font-bold text-white mb-2">{stats.studyStreak} Days</h3>
+            <p className="text-sm text-indigo-400 font-medium">Active learner</p>
           </div>
         </div>
 
@@ -56,8 +141,8 @@ export default function DashboardPage() {
             <div className="text-sm font-medium text-gray-300 mt-1 leading-tight">Topics<br/>Completed</div>
           </div>
           <div className="relative z-10 mt-4">
-            <h3 className="text-4xl font-bold text-white mb-2">38 Topics</h3>
-            <p className="text-sm text-purple-400 font-medium">6 this week</p>
+            <h3 className="text-4xl font-bold text-white mb-2">{stats.topicsCompleted} Topics</h3>
+            <p className="text-sm text-purple-400 font-medium">Summaries & Quizzes</p>
           </div>
         </div>
 
@@ -71,8 +156,8 @@ export default function DashboardPage() {
             <div className="text-sm font-medium text-gray-300 mt-1">PDFs Uploaded</div>
           </div>
           <div className="relative z-10 mt-6">
-            <h3 className="text-4xl font-bold text-white mb-2">52 Files</h3>
-            <p className="text-sm text-cyan-400 font-medium">8 newly indexed</p>
+            <h3 className="text-4xl font-bold text-white mb-2">{stats.pdfsUploaded} Files</h3>
+            <p className="text-sm text-cyan-400 font-medium">Securely stored</p>
           </div>
         </div>
 
@@ -86,8 +171,8 @@ export default function DashboardPage() {
             <div className="text-sm font-medium text-gray-300 mt-1">Quiz Score</div>
           </div>
           <div className="relative z-10 mt-6">
-            <h3 className="text-4xl font-bold text-white mb-2">92%</h3>
-            <p className="text-sm text-emerald-400 font-medium">+4% avg</p>
+            <h3 className="text-4xl font-bold text-white mb-2">{stats.quizAvg}%</h3>
+            <p className="text-sm text-emerald-400 font-medium">Average score</p>
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { BookOpen, Upload, Loader2, FileText, CheckCircle2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { BookOpen, Upload, Loader2, FileText, CheckCircle2, Maximize2, Minimize2, X } from "lucide-react";
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -13,8 +13,20 @@ export default function SummaryAgentPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
+  const [modificationRequest, setModificationRequest] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -86,9 +98,11 @@ export default function SummaryAgentPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative max-w-5xl mx-auto">
-      <div className="bg-[#161B29]/80 backdrop-blur-xl rounded-2xl p-8 border border-white/5 relative overflow-hidden min-h-[400px]">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-50 pointer-events-none" />
+    <div className={`space-y-6 max-w-5xl mx-auto ${isFullscreen ? '' : 'animate-in fade-in slide-in-from-bottom-4 duration-500 relative'}`}>
+      <div className={`bg-[#161B29]/80 rounded-2xl p-8 border border-white/5 min-h-[400px] ${isFullscreen ? '' : 'relative overflow-hidden backdrop-blur-xl'}`}>
+        {!isFullscreen && (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-50 pointer-events-none" />
+        )}
         
         <div className="relative z-10 flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -156,27 +170,105 @@ export default function SummaryAgentPage() {
           </div>
 
           {/* Right Column: Output */}
-          <div className="bg-[#0B0F19] rounded-xl border border-white/5 p-6 h-[500px] overflow-y-auto custom-scrollbar">
-            {!summary && !isUploading && (
-              <div className="h-full flex flex-col items-center justify-center text-gray-500 space-y-4">
-                <BookOpen className="w-12 h-12 opacity-20" />
-                <p>Your chapter-wise summary will appear here.</p>
-              </div>
-            )}
+          <div className={
+            isFullscreen 
+              ? "fixed inset-0 z-[9999] w-screen h-screen m-0 rounded-none bg-[#0B0F19] flex flex-col p-6 md:p-12 transition-all duration-300 overflow-y-auto"
+              : "flex flex-col gap-4 h-[500px] relative transition-all duration-300"
+          }>
             
-            {isUploading && (
-              <div className="h-full flex flex-col items-center justify-center text-blue-400 space-y-4">
-                <Loader2 className="w-8 h-8 animate-spin" />
-                <p className="animate-pulse">AI is reading your document...</p>
-              </div>
-            )}
+            <div className={`bg-[#0B0F19] rounded-xl border border-white/5 flex-1 flex flex-col ${isFullscreen ? 'p-10 max-w-5xl mx-auto w-full shadow-2xl border-white/10' : 'p-6 overflow-y-auto custom-scrollbar'}`}>
+              
+              {/* Header with Fullscreen Toggle */}
+              {(summary || isUploading) && (
+                <div className="flex justify-between items-center mb-4 pb-4 border-b border-white/5 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-blue-400" />
+                    <h3 className="text-white font-semibold">{isFullscreen ? 'Fullscreen Reading Mode' : 'Generated Summary'}</h3>
+                  </div>
+                  <button 
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                    className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors flex items-center gap-2 text-sm"
+                    title={isFullscreen ? "Exit Fullscreen (Esc)" : "Enter Fullscreen"}
+                  >
+                    {isFullscreen ? (
+                      <>
+                        <span className="hidden md:inline">Exit</span>
+                        <Minimize2 className="w-4 h-4" />
+                      </>
+                    ) : (
+                      <Maximize2 className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              )}
 
+              {!summary && !isUploading && (
+                <div className="h-full flex flex-col items-center justify-center text-gray-500 space-y-4 m-auto">
+                  <BookOpen className="w-12 h-12 opacity-20" />
+                  <p>Your chapter-wise summary will appear here.</p>
+                </div>
+              )}
+              
+              {isUploading && (
+                <div className="h-full flex flex-col items-center justify-center text-blue-400 space-y-4 m-auto">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <p className="animate-pulse">AI is working...</p>
+                </div>
+              )}
+
+              {summary && !isUploading && (
+                <div className="prose prose-invert prose-blue max-w-none flex-1">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {summary}
+                  </ReactMarkdown>
+                </div>
+              )}
+            </div>
+            
+            {/* AI Refiner Tool */}
             {summary && (
-              <div className="prose prose-invert prose-blue max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {summary}
-                </ReactMarkdown>
-              </div>
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!modificationRequest.trim() || isUploading) return;
+                  
+                  setIsUploading(true);
+                  const formData = new FormData();
+                  formData.append("modificationRequest", modificationRequest);
+                  formData.append("currentSummary", summary);
+
+                  try {
+                    const res = await fetch("/api/agents/summary", { method: "POST", body: formData });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error);
+                    
+                    setSummary(data.summary);
+                    setModificationRequest("");
+                    toast.success("Summary modified successfully!");
+                  } catch (err: any) {
+                    toast.error(err.message || "Failed to modify summary");
+                  } finally {
+                    setIsUploading(false);
+                  }
+                }}
+                className={`flex gap-2 shrink-0 ${isFullscreen ? 'max-w-5xl mx-auto w-full mt-4' : ''}`}
+              >
+                <input 
+                  type="text" 
+                  value={modificationRequest}
+                  onChange={(e) => setModificationRequest(e.target.value)}
+                  placeholder="Ask AI to simplify, expand, or format as a table..."
+                  className="flex-1 px-4 py-3 bg-[#0B0F19] border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 transition-colors text-sm shadow-xl"
+                  disabled={isUploading}
+                />
+                <button 
+                  type="submit" 
+                  disabled={isUploading || !modificationRequest.trim()}
+                  className="px-6 py-3 bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/50 text-white font-medium rounded-xl transition-colors shrink-0 shadow-xl"
+                >
+                  Apply
+                </button>
+              </form>
             )}
           </div>
         </div>

@@ -13,6 +13,8 @@ export default function VoiceAgentPage() {
 
   const recognitionRef = useRef<any>(null);
   const synthesisRef = useRef<SpeechSynthesis | null>(null);
+  const isManualStopRef = useRef(false);
+  const accumulatedTranscriptRef = useRef("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -21,27 +23,51 @@ export default function VoiceAgentPage() {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = false;
+        recognitionRef.current.continuous = true;
         recognitionRef.current.interimResults = true;
 
         recognitionRef.current.onresult = (event: any) => {
-          let currentTranscript = "";
+          let interim = "";
+          let final = "";
           for (let i = event.resultIndex; i < event.results.length; ++i) {
-            currentTranscript += event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              final += event.results[i][0].transcript;
+            } else {
+              interim += event.results[i][0].transcript;
+            }
           }
-          setTranscript(currentTranscript);
+          
+          if (final) {
+            accumulatedTranscriptRef.current += final + " ";
+          }
+          
+          setTranscript(accumulatedTranscriptRef.current + interim);
         };
 
         recognitionRef.current.onerror = (event: any) => {
           console.error("Speech recognition error", event.error);
-          setIsListening(false);
           if (event.error !== "no-speech") {
-             toast.error("Microphone error: " + event.error);
+            // Only stop completely on actual critical errors, otherwise let it try to restart
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+              isManualStopRef.current = true;
+              setIsListening(false);
+              toast.error("Microphone error: " + event.error);
+            }
           }
         };
 
         recognitionRef.current.onend = () => {
-          setIsListening(false);
+          if (!isManualStopRef.current) {
+            // Browser stopped it due to silence or timeout, so we immediately restart it
+            try {
+              recognitionRef.current.start();
+            } catch (e) {
+              console.error("Failed to restart recognition:", e);
+              setIsListening(false);
+            }
+          } else {
+            setIsListening(false);
+          }
         };
       }
     }
@@ -54,14 +80,22 @@ export default function VoiceAgentPage() {
     }
 
     if (isListening) {
+      isManualStopRef.current = true;
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
+      isManualStopRef.current = false;
+      accumulatedTranscriptRef.current = "";
       setTranscript("");
       setResponse("");
       if (synthesisRef.current) synthesisRef.current.cancel(); // Stop playing if speaking
-      recognitionRef.current.start();
-      setIsListening(true);
+      
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (e) {
+        // Ignore if already started
+      }
     }
   };
 

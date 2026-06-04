@@ -14,7 +14,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="absolute bottom-[-200px] right-[-200px] w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
         
         {/* Header */}
-        <header className="h-20 px-8 flex items-center justify-end sticky top-0 z-10">
+        <header className="h-20 px-8 flex items-center justify-between sticky top-0 z-10">
+          <div>
+            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+              Student Dashboard
+            </h1>
+          </div>
           <div className="flex items-center gap-6">
             <button className="relative p-2 text-gray-400 hover:text-white transition-colors">
               <Bell size={20} />

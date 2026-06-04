@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-export const maxDuration = 60; // Prevent Vercel 504 Timeout
+export const maxDuration = 60; // Prevent Vercel Serverless timeout
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -9,28 +9,21 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const topic = formData.get("topic") as string;
-    const file = formData.get("file") as File;
+    const file = formData.get("file") as File | null;
 
     if (!topic && !file) {
       return NextResponse.json({ error: "Please provide either a topic or a file" }, { status: 400 });
     }
 
-    let extractedText = "";
-    if (file) {
+    let base64Data = "";
+    if (file && file.size > 0) {
       const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const pdf = require("pdf-parse");
-      const pdfData = await pdf(buffer);
-      extractedText = pdfData.text;
-      
-      if (!extractedText || extractedText.trim().length === 0) {
-        return NextResponse.json({ error: "Could not extract text from the PDF" }, { status: 400 });
-      }
+      base64Data = Buffer.from(arrayBuffer).toString("base64");
     }
 
-    const prompt = `You are a rigorous Quiz Examiner. Generate a highly accurate evaluation assessment based on the following ${file ? 'document' : 'topic'}:
+    const prompt = `You are a rigorous Quiz Examiner. Generate a highly accurate evaluation assessment based on the provided document or topic:
     
-${file ? `Document Text:\n${extractedText.substring(0, 35000)}` : `Topic: "${topic}"`}
+${file ? `Analyze the attached PDF Document and generate questions based on it.` : `Topic: "${topic}"`}
 
 You must generate exactly 20 multiple choice questions (mcq).
 Mix conceptual and application-based questions.
@@ -41,15 +34,35 @@ Output ONLY a valid JSON array matching this exact schema, with no markdown form
   {
     "type": "mcq",
     "question": "...",
-    "options": ["A", "B", "C", "D"],
-    "answer": "A",
+    "options": ["Option 1 text", "Option 2 text", "Option 3 text", "Option 4 text"],
+    "answer": "The exact text of the correct option",
     "explanation": "..."
   }
 ]`;
 
+    let contents: any[] = [];
+    if (file && base64Data) {
+      contents = [
+        {
+          role: 'user',
+          parts: [
+            {
+              inlineData: {
+                data: base64Data,
+                mimeType: file.type || "application/pdf"
+              }
+            },
+            { text: prompt }
+          ]
+        }
+      ];
+    } else {
+      contents = [{ role: 'user', parts: [{ text: prompt }] }];
+    }
+
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: prompt,
+      contents: contents,
       config: {
         responseMimeType: "application/json",
       }
