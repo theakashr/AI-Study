@@ -7,12 +7,14 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuth } from "@/lib/useAuth";
 import { saveAgentData } from "@/lib/db";
+import { useCooldown } from "@/hooks/useCooldown";
 
 export default function ResearchAgentPage() {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [report, setReport] = useState<string | null>(null);
+  const { cooldown, startCooldown } = useCooldown();
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +53,7 @@ export default function ResearchAgentPage() {
       toast.error(error.message);
     } finally {
       setIsGenerating(false);
+      startCooldown(15);
     }
   };
 
@@ -105,16 +108,20 @@ export default function ResearchAgentPage() {
                 />
               </div>
 
-              <div className="pt-2">
                 <button 
                   type="submit"
-                  disabled={isGenerating}
+                  disabled={isGenerating || cooldown > 0}
                   className="w-full py-3 bg-indigo-500 hover:bg-indigo-400 disabled:bg-indigo-500/50 text-white font-medium rounded-xl transition-colors shadow-[0_0_15px_rgba(79,70,229,0.4)] disabled:shadow-none flex items-center justify-center gap-2"
                 >
                   {isGenerating ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
                       Researching...
+                    </>
+                  ) : cooldown > 0 ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Cooldown ({cooldown}s)
                     </>
                   ) : (
                     <>

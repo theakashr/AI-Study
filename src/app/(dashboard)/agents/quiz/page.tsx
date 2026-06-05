@@ -5,6 +5,7 @@ import { Zap, Loader2, PlayCircle, CheckCircle2, XCircle, Upload, FileText } fro
 import toast from "react-hot-toast";
 import { useAuth } from "@/lib/useAuth";
 import { saveAgentData } from "@/lib/db";
+import { useCooldown } from "@/hooks/useCooldown";
 
 interface QuizQuestion {
   type: string;
@@ -25,6 +26,7 @@ export default function QuizAgentPage() {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [quizStatus, setQuizStatus] = useState<"empty" | "active" | "results">("empty");
   const [score, setScore] = useState(0);
+  const { cooldown, startCooldown } = useCooldown();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -87,6 +89,7 @@ export default function QuizAgentPage() {
       toast.error(error.message);
     } finally {
       setIsGenerating(false);
+      startCooldown(15);
     }
   };
 
@@ -210,13 +213,18 @@ export default function QuizAgentPage() {
             <div className="md:col-span-2 flex justify-center mt-4">
               <button 
                 onClick={() => handleGenerate()}
-                disabled={isGenerating || (!topic && !file)}
+                disabled={isGenerating || (!topic && !file) || cooldown > 0}
                 className="px-10 py-4 bg-yellow-500 hover:bg-yellow-400 disabled:bg-yellow-500/50 text-black font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(234,179,8,0.4)] disabled:shadow-none flex items-center gap-2 text-lg"
               >
                 {isGenerating ? (
                   <>
                     <Loader2 className="w-6 h-6 animate-spin" />
                     Generating 20 Questions...
+                  </>
+                ) : cooldown > 0 ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    Cooldown ({cooldown}s)
                   </>
                 ) : (
                   <>

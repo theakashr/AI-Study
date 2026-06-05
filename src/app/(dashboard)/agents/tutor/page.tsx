@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuth } from "@/lib/useAuth";
 import { saveAgentData, updateAgentData } from "@/lib/db";
+import { useCooldown } from "@/hooks/useCooldown";
 
 interface Message {
   role: "user" | "model";
@@ -23,6 +24,7 @@ export default function TutorAgentPage() {
   const [context, setContext] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { cooldown, startCooldown } = useCooldown();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -80,6 +82,7 @@ export default function TutorAgentPage() {
       toast.error(error.message);
     } finally {
       setIsProcessing(false);
+      startCooldown(10);
     }
   };
 
@@ -177,10 +180,10 @@ export default function TutorAgentPage() {
               />
               <button 
                 type="submit"
-                disabled={isProcessing || !input.trim()}
+                disabled={isProcessing || !input.trim() || cooldown > 0}
                 className="p-3 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/50 text-white rounded-xl transition-colors shadow-lg disabled:shadow-none shrink-0"
               >
-                <Send className="w-5 h-5" />
+                {cooldown > 0 ? <span className="text-xs font-bold">{cooldown}s</span> : <Send className="w-5 h-5" />}
               </button>
             </form>
           </div>

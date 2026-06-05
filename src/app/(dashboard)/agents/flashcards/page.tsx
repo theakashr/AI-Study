@@ -5,6 +5,7 @@ import { Target, Loader2, PlayCircle, ChevronRight, ChevronLeft, RotateCcw } fro
 import toast from "react-hot-toast";
 import { useAuth } from "@/lib/useAuth";
 import { saveAgentData } from "@/lib/db";
+import { useCooldown } from "@/hooks/useCooldown";
 
 interface Flashcard {
   front: string;
@@ -19,6 +20,7 @@ export default function FlashcardAgentPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [status, setStatus] = useState<"empty" | "active">("empty");
+  const { cooldown, startCooldown } = useCooldown();
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +62,7 @@ export default function FlashcardAgentPage() {
       toast.error(error.message);
     } finally {
       setIsGenerating(false);
+      startCooldown(15);
     }
   };
 
@@ -106,13 +109,18 @@ export default function FlashcardAgentPage() {
               />
               <button 
                 type="submit"
-                disabled={isGenerating}
+                disabled={isGenerating || cooldown > 0}
                 className="px-8 py-3 bg-red-500 hover:bg-red-400 disabled:bg-red-500/50 text-white font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(239,68,68,0.4)] disabled:shadow-none flex items-center gap-2"
               >
                 {isGenerating ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
                     Generating Cards...
+                  </>
+                ) : cooldown > 0 ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Cooldown ({cooldown}s)
                   </>
                 ) : (
                   <>

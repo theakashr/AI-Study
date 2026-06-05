@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuth } from "@/lib/useAuth";
 import { saveAgentData } from "@/lib/db";
+import { useCooldown } from "@/hooks/useCooldown";
 
 export default function StudyPlannerAgentPage() {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ export default function StudyPlannerAgentPage() {
   const [hoursPerDay, setHoursPerDay] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [schedule, setSchedule] = useState<string | null>(null);
+  const { cooldown, startCooldown } = useCooldown();
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +57,7 @@ export default function StudyPlannerAgentPage() {
       toast.error(error.message);
     } finally {
       setIsGenerating(false);
+      startCooldown(15);
     }
   };
 
@@ -127,13 +130,18 @@ export default function StudyPlannerAgentPage() {
               <div className="pt-2">
                 <button 
                   type="submit"
-                  disabled={isGenerating}
+                  disabled={isGenerating || cooldown > 0}
                   className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-500/50 text-black font-bold rounded-xl transition-colors shadow-[0_0_15px_rgba(16,185,129,0.4)] disabled:shadow-none flex items-center justify-center gap-2"
                 >
                   {isGenerating ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
                       Planning...
+                    </>
+                  ) : cooldown > 0 ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Cooldown ({cooldown}s)
                     </>
                   ) : (
                     <>

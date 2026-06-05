@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuth } from "@/lib/useAuth";
 import { saveAgentData } from "@/lib/db";
+import { useCooldown } from "@/hooks/useCooldown";
 
 export default function SummaryAgentPage() {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ export default function SummaryAgentPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { cooldown, startCooldown } = useCooldown();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -94,6 +96,7 @@ export default function SummaryAgentPage() {
       toast.error(error.message);
     } finally {
       setIsUploading(false);
+      startCooldown(15);
     }
   };
 
@@ -155,13 +158,18 @@ export default function SummaryAgentPage() {
 
             <button 
               onClick={handleGenerate}
-              disabled={!file || isUploading}
+              disabled={!file || isUploading || cooldown > 0}
               className="w-full py-3 bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/50 text-white font-medium rounded-xl transition-colors shadow-[0_0_15px_rgba(59,130,246,0.4)] disabled:shadow-none flex items-center justify-center gap-2"
             >
               {isUploading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Extracting & Summarizing...
+                </>
+              ) : cooldown > 0 ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Cooldown ({cooldown}s)
                 </>
               ) : (
                 "Generate Exam Notes"
