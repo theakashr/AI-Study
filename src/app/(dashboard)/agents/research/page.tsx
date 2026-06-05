@@ -108,6 +108,7 @@ export default function ResearchAgentPage() {
                 />
               </div>
 
+              <div className="pt-2">
                 <button 
                   type="submit"
                   disabled={isGenerating || cooldown > 0}
