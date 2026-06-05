@@ -1,9 +1,22 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Bell } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
   return (
     <div className="flex h-screen bg-[#0B0F19] text-white overflow-hidden font-sans">
 
@@ -20,6 +33,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </h1>
           </div>
           <div className="flex items-center gap-4 md:gap-6">
+            <button 
+              onClick={handleLogout}
+              title="Log out"
+              className="p-2 text-gray-400 hover:text-red-400 transition-colors flex items-center gap-2"
+            >
+              <LogOut size={20} />
+              <span className="hidden sm:inline text-sm font-medium">Log out</span>
+            </button>
             <button className="relative p-2 text-gray-400 hover:text-white transition-colors hidden sm:block">
               <Bell size={20} />
               <span className="absolute top-1 right-1 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_8px_rgba(168,85,247,1)]" />
