@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { getGeminiClient } from "@/lib/gemini";
 
-export const maxDuration = 60; // Prevent Vercel 504 Timeout
-
-// Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+export const maxDuration = 60; // Extend duration for processing large files
 
 export async function POST(req: NextRequest) {
   try {
@@ -103,6 +100,7 @@ INSTRUCTIONS:
     }
 
     // Call Gemini 2.5 Flash natively
+    const ai = getGeminiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: contents

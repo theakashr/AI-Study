@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { getGeminiClient } from "@/lib/gemini";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+export const maxDuration = 60; // Prevent Vercel Timeout
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,6 +35,7 @@ RULES:
       formattedMessages[0].parts[0].text = `[SYSTEM INSTRUCTIONS]:\n${systemPrompt}\n\n[USER MESSAGE]:\n${formattedMessages[0].parts[0].text}`;
     }
 
+    const ai = getGeminiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: formattedMessages,

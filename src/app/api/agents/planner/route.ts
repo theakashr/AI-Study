@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { getGeminiClient } from "@/lib/gemini";
 
 export const maxDuration = 60; // Prevent Vercel 504 Timeout
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,6 +23,7 @@ Rules:
 3. Deliver the schedule strictly in a clean, professional Markdown table format.
 4. Do not include excessive conversational text, just the generated schedule and a brief encouraging note at the end.`;
 
+    const ai = getGeminiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,

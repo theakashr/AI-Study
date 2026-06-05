@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { getGeminiClient } from "@/lib/gemini";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+export const maxDuration = 60; // Extend duration for processing
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,6 +22,7 @@ CRITICAL RULES FOR VOICE SYNTHESIS:
 2. DO NOT use markdown, bullet points, asterisks, brackets, or code snippets. The response will be read aloud by a Text-to-Speech engine, so special characters will sound glitchy.
 3. Use natural transition words. Keep sentences relatively short and punchy for natural pauses.`;
 
+    const ai = getGeminiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,

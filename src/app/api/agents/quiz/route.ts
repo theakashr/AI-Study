@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { getGeminiClient } from "@/lib/gemini";
 
 export const maxDuration = 60; // Prevent Vercel Serverless timeout
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
@@ -60,6 +58,7 @@ Output ONLY a valid JSON array matching this exact schema, with no markdown form
       contents = [{ role: 'user', parts: [{ text: prompt }] }];
     }
 
+    const ai = getGeminiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: contents,
