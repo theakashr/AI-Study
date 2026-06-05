@@ -13,9 +13,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <Sidebar isOpen={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-full relative z-0 overflow-y-auto">
-        <div className="absolute top-[-200px] left-[-200px] w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
-        <div className="absolute bottom-[-200px] right-[-200px] w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <main className="flex-1 flex flex-col h-full relative overflow-y-auto">
+        <div className="absolute top-[-200px] left-[-200px] w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-200px] right-[-200px] w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
         
         {/* Header */}
         <header className="h-16 md:h-20 px-4 md:px-8 flex items-center justify-between sticky top-0 z-10 bg-[#0B0F19]/50 backdrop-blur-md border-b border-white/5 md:border-none">
