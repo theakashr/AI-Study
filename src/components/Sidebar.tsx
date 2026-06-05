@@ -7,13 +7,7 @@ import { LayoutDashboard, BookOpen, Upload, ClipboardList, BarChart3, Settings, 
 export function Sidebar({ isOpen = true, setIsOpen }: { isOpen?: boolean; setIsOpen?: (v: boolean) => void }) {
   const pathname = usePathname();
 
-  const navItems = [
-    { href: "/modules", icon: BookOpen, label: "Modules", layout: "vertical" },
-    { href: "/uploads", icon: Upload, label: "Uploads", layout: "vertical" },
-    { href: "/quizzes", icon: ClipboardList, label: "Quizzes", layout: "vertical" },
-    { href: "/progress", icon: BarChart3, label: "Progress", layout: "vertical" },
-    { href: "/settings", icon: Settings, label: "Settings", layout: "vertical" },
-  ];
+  const navItems: any[] = [];
 
   return (
     <aside className={`w-64 bg-[#121622]/95 md:bg-[#121622]/80 backdrop-blur-xl border-r border-white/5 flex flex-col fixed inset-y-0 left-0 z-50 transform md:relative md:translate-x-0 transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}>
