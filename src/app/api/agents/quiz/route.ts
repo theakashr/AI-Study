@@ -71,7 +71,32 @@ Output ONLY a valid JSON array matching this exact schema, with no markdown form
     let rawText = response.text || "[]";
     rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
     
-    const quizData = JSON.parse(rawText);
+    let quizData;
+    try {
+      quizData = JSON.parse(rawText);
+      
+      // If Gemini returned an object instead of an array, extract the array
+      if (!Array.isArray(quizData)) {
+        if (quizData.quiz && Array.isArray(quizData.quiz)) {
+          quizData = quizData.quiz;
+        } else if (quizData.questions && Array.isArray(quizData.questions)) {
+          quizData = quizData.questions;
+        } else {
+          // Try to find any array inside the object
+          const possibleArray = Object.values(quizData).find(val => Array.isArray(val));
+          if (possibleArray) {
+            quizData = possibleArray;
+          } else {
+            console.error("AI returned invalid JSON structure:", quizData);
+            throw new Error("AI returned an invalid quiz format. Please try again.");
+          }
+        }
+      }
+    } catch (parseError) {
+      console.error("Failed to parse Quiz JSON. Raw text:", rawText);
+      throw new Error("Failed to parse the generated quiz. Please try again.");
+    }
+    
     return NextResponse.json({ quiz: quizData });
 
   } catch (error: any) {
