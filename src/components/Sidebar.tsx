@@ -8,7 +8,6 @@ export function Sidebar({ isOpen = true, setIsOpen }: { isOpen?: boolean; setIsO
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", layout: "horizontal" },
     { href: "/modules", icon: BookOpen, label: "Modules", layout: "vertical" },
     { href: "/uploads", icon: Upload, label: "Uploads", layout: "vertical" },
     { href: "/quizzes", icon: ClipboardList, label: "Quizzes", layout: "vertical" },
